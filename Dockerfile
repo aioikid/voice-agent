@@ -7,7 +7,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
-# Copy all source files
+# Copy all source files including index.html at root
 COPY index.html ./
 COPY vite.config.ts ./
 COPY tsconfig*.json ./
