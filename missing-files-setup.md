@@ -411,12 +411,12 @@ DEFAULT_ROOM_NAME=talktune
 
 ### 10. Docker起動
 ```bash
-docker-compose build && docker-compose up -d
+/usr/local/bin/docker-compose build && /usr/local/bin/docker-compose up -d
 ```
 
 ### 11. 動作確認
 ```bash
-docker-compose ps
+/usr/local/bin/docker-compose ps
 curl http://localhost:8000/health
 ```
 

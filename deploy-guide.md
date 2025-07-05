@@ -104,20 +104,20 @@ ufw status
 cd /opt/voice-agent
 
 # Dockerイメージをビルド
-docker-compose build
+/usr/local/bin/docker-compose build
 
 # コンテナを起動
-docker-compose up -d
+/usr/local/bin/docker-compose up -d
 
 # ログを確認
-docker-compose logs -f
+/usr/local/bin/docker-compose logs -f
 ```
 
 ### 2. 動作確認
 
 ```bash
 # コンテナの状態確認
-docker-compose ps
+/usr/local/bin/docker-compose ps
 
 # ヘルスチェック
 curl http://localhost:8000/health
@@ -154,7 +154,7 @@ nano /opt/voice-agent/nginx.conf
 
 ```bash
 cd /opt/voice-agent
-docker-compose restart nginx
+/usr/local/bin/docker-compose restart nginx
 ```
 
 ## 📊 監視とメンテナンス
@@ -163,10 +163,10 @@ docker-compose restart nginx
 
 ```bash
 # リアルタイムログ
-docker-compose logs -f voice-agent
+/usr/local/bin/docker-compose logs -f voice-agent
 
 # エージェントログのみ
-docker-compose logs -f voice-agent | grep agent
+/usr/local/bin/docker-compose logs -f voice-agent | grep agent
 ```
 
 ### 2. 自動再起動設定
@@ -225,7 +225,7 @@ echo "0 2 * * * /opt/backup-voice-agent.sh" | crontab -
 
 ```bash
 # ログを確認
-docker-compose logs voice-agent
+/usr/local/bin/docker-compose logs voice-agent
 
 # コンテナの状態確認
 docker ps -a
@@ -238,8 +238,8 @@ docker run -it --rm voice-agent_voice-agent /bin/bash
 
 ```bash
 # 環境変数を確認
-docker-compose exec voice-agent env | grep LIVEKIT
-docker-compose exec voice-agent env | grep OPENAI
+/usr/local/bin/docker-compose exec voice-agent env | grep LIVEKIT
+/usr/local/bin/docker-compose exec voice-agent env | grep OPENAI
 
 # エージェントを手動で再起動
 curl -X POST http://localhost:8000/agent/restart
@@ -249,7 +249,7 @@ curl -X POST http://localhost:8000/agent/restart
 
 ```bash
 # Nginxの設定を確認
-docker-compose logs nginx
+/usr/local/bin/docker-compose logs nginx
 
 # ポートが開いているか確認
 netstat -tlnp | grep :80
@@ -273,9 +273,9 @@ cd /opt/voice-agent
 git pull
 
 # コンテナを再ビルド・再起動
-docker-compose down
-docker-compose build --no-cache
-docker-compose up -d
+/usr/local/bin/docker-compose down
+/usr/local/bin/docker-compose build --no-cache
+/usr/local/bin/docker-compose up -d
 
 # 動作確認
 curl http://localhost:8000/health

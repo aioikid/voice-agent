@@ -200,7 +200,7 @@ ufw status
 2. プロジェクトファイルを作成
 3. `.env`ファイルに実際のAPIキーを設定
 4. ファイアウォール設定
-5. `docker-compose build && docker-compose up -d` で起動
+5. `/usr/local/bin/docker-compose build && /usr/local/bin/docker-compose up -d` で起動
 
 **重要**: `.env`ファイルに実際のAPIキーを設定するまでエージェントは動作しません！
 

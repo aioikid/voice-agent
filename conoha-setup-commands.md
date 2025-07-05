@@ -38,25 +38,25 @@ DEFAULT_ROOM_NAME=talktune
 ## 3. Docker Compose でビルド・起動
 ```bash
 # Dockerイメージをビルド
-docker-compose build
+/usr/local/bin/docker-compose build
 
 # バックグラウンドで起動
-docker-compose up -d
+/usr/local/bin/docker-compose up -d
 
 # ログを確認（リアルタイム）
-docker-compose logs -f
+/usr/local/bin/docker-compose logs -f
 ```
 
 ## 4. 動作確認
 ```bash
 # コンテナ状態確認
-docker-compose ps
+/usr/local/bin/docker-compose ps
 
 # ヘルスチェック
 curl http://localhost:8000/health
 
 # サービス状態確認
-docker-compose logs voice-agent
+/usr/local/bin/docker-compose logs voice-agent
 ```
 
 ## 5. 外部アクセステスト
@@ -72,6 +72,6 @@ netstat -tlnp | grep :8000
 ufw status
 
 # 環境変数確認
-docker-compose exec voice-agent env | grep LIVEKIT
-docker-compose exec voice-agent env | grep OPENAI
+/usr/local/bin/docker-compose exec voice-agent env | grep LIVEKIT
+/usr/local/bin/docker-compose exec voice-agent env | grep OPENAI
 ```

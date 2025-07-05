@@ -433,20 +433,20 @@ ls -la
 
 ```bash
 # Dockerイメージをビルド
-docker-compose build
+/usr/local/bin/docker-compose build
 
 # バックグラウンドで起動
-docker-compose up -d
+/usr/local/bin/docker-compose up -d
 
 # ログを確認
-docker-compose logs -f
+/usr/local/bin/docker-compose logs -f
 ```
 
 ## 🔍 6. 動作確認
 
 ```bash
 # コンテナ状態確認
-docker-compose ps
+/usr/local/bin/docker-compose ps
 
 # ヘルスチェック
 curl http://localhost:8000/health
@@ -473,30 +473,30 @@ curl http://160.251.140.29:8000/health
 ### ログ確認
 ```bash
 # 全体のログ
-docker-compose logs
+/usr/local/bin/docker-compose logs
 
 # エージェントのログのみ
-docker-compose logs voice-agent
+/usr/local/bin/docker-compose logs voice-agent
 
 # リアルタイムログ
-docker-compose logs -f voice-agent
+/usr/local/bin/docker-compose logs -f voice-agent
 ```
 
 ### 再起動
 ```bash
 # サービス再起動
-docker-compose restart
+/usr/local/bin/docker-compose restart
 
 # 完全リビルド
-docker-compose down
-docker-compose build --no-cache
-docker-compose up -d
+/usr/local/bin/docker-compose down
+/usr/local/bin/docker-compose build --no-cache
+/usr/local/bin/docker-compose up -d
 ```
 
 ### 環境変数確認
 ```bash
-docker-compose exec voice-agent env | grep LIVEKIT
-docker-compose exec voice-agent env | grep OPENAI
+/usr/local/bin/docker-compose exec voice-agent env | grep LIVEKIT
+/usr/local/bin/docker-compose exec voice-agent env | grep OPENAI
 ```
 
 ---
@@ -506,7 +506,7 @@ docker-compose exec voice-agent env | grep OPENAI
 1. 上記のファイル作成コマンドをすべて実行
 2. `.env`ファイルに実際のAPIキーを設定
 3. ファイアウォール設定
-4. `docker-compose build && docker-compose up -d`
+4. `/usr/local/bin/docker-compose build && /usr/local/bin/docker-compose up -d`
 5. ブラウザで `http://160.251.140.29:8000` にアクセス
 
 **準備ができたら実行してください！**

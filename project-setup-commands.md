@@ -452,7 +452,7 @@ ls -la
 ## 🔑 **重要: 次のステップ**
 
 1. **環境変数設定**: `.env`ファイルを編集して実際のAPIキーを設定
-2. **Docker起動**: `docker-compose build && docker-compose up -d`
+2. **Docker起動**: `/usr/local/bin/docker-compose build && /usr/local/bin/docker-compose up -d`
 
 ### .envファイル編集方法
 
