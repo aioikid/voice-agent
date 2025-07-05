@@ -37,14 +37,9 @@ export const useLiveKitVoiceAgent = (config: LiveKitConfig) => {
       const room = new Room();
       roomRef.current = room;
 
-      // Set up event listeners
       room.on(RoomEvent.Connected, () => {
         setState(prev => ({ ...prev, isConnected: true, isConnecting: false }));
-        
-        // Start audio level monitoring
         audioLevelInterval.current = setInterval(updateAudioLevel, 100);
-        
-        // Enable microphone after connection
         enableMicrophone(room);
       });
 
@@ -65,15 +60,11 @@ export const useLiveKitVoiceAgent = (config: LiveKitConfig) => {
       room.on(RoomEvent.TrackSubscribed, (track: RemoteTrack) => {
         if (track.kind === Track.Kind.Audio) {
           setState(prev => ({ ...prev, isListening: true }));
-          console.log('Audio track subscribed - agent is speaking');
-          
-          // Ensure the audio track is played
           const audioElement = track.attach();
           if (audioElement) {
             audioElement.autoplay = true;
             audioElement.volume = 1.0;
             document.body.appendChild(audioElement);
-            console.log('Audio element attached and added to DOM');
           }
         }
       });
@@ -81,9 +72,6 @@ export const useLiveKitVoiceAgent = (config: LiveKitConfig) => {
       room.on(RoomEvent.TrackUnsubscribed, (track: RemoteTrack) => {
         if (track.kind === Track.Kind.Audio) {
           setState(prev => ({ ...prev, isListening: false }));
-          console.log('Audio track unsubscribed - agent finished speaking');
-          
-          // Clean up audio element
           const audioElements = document.querySelectorAll('audio');
           audioElements.forEach(element => {
             if (element.srcObject === track.mediaStream) {
@@ -93,7 +81,6 @@ export const useLiveKitVoiceAgent = (config: LiveKitConfig) => {
         }
       });
 
-      // Connect to the room
       await room.connect(config.url, config.token);
       
     } catch (error) {
@@ -108,32 +95,15 @@ export const useLiveKitVoiceAgent = (config: LiveKitConfig) => {
 
   const enableMicrophone = useCallback(async (room: Room) => {
     try {
-      // Check if getUserMedia is available
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         console.warn('getUserMedia not supported in this environment');
-        // Don't set error state for development environments
         return;
       }
 
-      // Request microphone permission and enable
       await room.localParticipant.enableCameraAndMicrophone(false, true);
       
     } catch (error) {
       console.warn('Microphone not available in this environment:', error);
-      if (error instanceof Error) {
-        if (error.name === 'NotAllowedError') {
-          setState(prev => ({ ...prev, error: 'マイクアクセスが拒否されました。マイクアクセスを許可してページを更新してください。' }));
-        } else if (error.name === 'NotFoundError') {
-          // In development environment, don't show error for missing microphone
-          console.info('開発環境ではマイクが利用できません。実際のデバイスでは正常に動作します。');
-        } else if (error.name === 'NotReadableError') {
-          setState(prev => ({ ...prev, error: 'マイクが他のアプリケーションで使用されています。' }));
-        } else {
-          console.info('マイクセットアップに失敗しましたが、接続は可能です。');
-        }
-      } else {
-        console.info('マイクセットアップに失敗しましたが、接続は可能です。');
-      }
     }
   }, []);
 
@@ -160,7 +130,6 @@ export const useLiveKitVoiceAgent = (config: LiveKitConfig) => {
     }
   }, []);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       disconnect();

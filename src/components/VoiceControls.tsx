@@ -20,7 +20,6 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
 }) => {
   return (
     <div className="flex items-center justify-center space-x-4">
-      {/* Connect/Disconnect Button */}
       <button
         onClick={isConnected ? onDisconnect : onConnect}
         disabled={isConnecting}
@@ -42,7 +41,6 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
         )}
       </button>
 
-      {/* Mute/Unmute Button */}
       <button
         onClick={onToggleMute}
         disabled={!isConnected}

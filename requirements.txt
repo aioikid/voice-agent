@@ -1,8 +1,6 @@
-# LiveKit Agents with OpenAI integrations
 livekit-agents[openai,silero,turn-detector]~=1.0
 livekit-plugins-noise-cancellation~=0.2
 python-dotenv
-
-# Optional: for development and testing
 uvicorn
 fastapi
+python-multipart

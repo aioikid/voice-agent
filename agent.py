@@ -92,6 +92,7 @@ async def entrypoint(ctx: agents.JobContext):
             )
             print("Simple greeting sent")
         except Exception as e2:
+            print(f"Failed to send simple greeting: {e2}")
 
 
 if __name__ == "__main__":

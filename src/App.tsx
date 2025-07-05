@@ -92,22 +92,6 @@ function App() {
                 <div>
                   <p className="text-yellow-800 text-sm font-medium">接続の問題</p>
                   <p className="text-yellow-700 text-sm">{state.error}</p>
-                  {state.error.includes('マイク') && (
-                    <div className="mt-2 text-xs text-yellow-600">
-                      <p><strong>解決方法:</strong></p>
-                      <ul className="list-disc list-inside space-y-1 mt-1">
-                        <li>ブラウザでマイクアクセスを許可してください</li>
-                        <li>マイクが接続されていることを確認してください</li>
-                        <li>他のアプリケーションがマイクを使用していないか確認してください</li>
-                        <li>ページを更新して再度お試しください</li>
-                      </ul>
-                    </div>
-                  )}
-                  {state.error.includes('Missing configuration') && (
-                    <div className="mt-2 text-xs text-yellow-600">
-                      <p><strong>解決方法:</strong> 設定ボタン（⚙️）をクリックしてLiveKit URLとアクセストークンを設定してください</p>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
@@ -122,49 +106,6 @@ function App() {
                   <p className="text-blue-800 text-sm font-medium">LiveKitルームに接続済み</p>
                   <p className="text-blue-700 text-sm">
                     AIエージェントが接続されました。数秒後に挨拶が聞こえるはずです。
-                    聞こえない場合は、Pythonエージェントを再起動してください:
-                  </p>
-                  <code className="bg-blue-100 px-2 py-1 rounded text-xs mt-1 inline-block">python agent.py dev</code>
-                  <div className="mt-2 text-xs text-blue-600">
-                    <p><strong>トラブルシューティング:</strong></p>
-                    <ul className="list-disc list-inside space-y-1 mt-1">
-                      <li>ブラウザの音量設定とシステム音量を確認してください</li>
-                      <li>ブラウザでオーディオの自動再生が許可されていることを確認してください</li>
-                      <li>エージェントを再起動してから再接続してください</li>
-                      <li>OpenAI APIキーが正しく設定されていることを確認してください</li>
-                      <li>ページを更新してから再度接続してください</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {/* Development Environment Notice */}
-          {!state.error && (
-            <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <div className="flex items-start space-x-2">
-                <div className="text-blue-600 mt-0.5">💡</div>
-                <div>
-                  <p className="text-blue-800 text-sm font-medium">開発環境での使用について</p>
-                  <p className="text-blue-700 text-sm">
-                    この環境ではマイクアクセスが制限されていますが、LiveKit接続のテストは可能です。
-                    実際のデバイス（PC、スマートフォンなど）では音声機能が正常に動作します。
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {/* Configuration Reminder */}
-          {!config.token && (
-            <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-              <div className="flex items-start space-x-2">
-                <div className="text-amber-600 mt-0.5">🔑</div>
-                <div>
-                  <p className="text-amber-800 text-sm font-medium">設定が必要です</p>
-                  <p className="text-amber-700 text-sm">
-                    設定ボタン（⚙️）をクリックしてLiveKitアクセストークンを設定してください。
                   </p>
                 </div>
               </div>
@@ -203,38 +144,6 @@ function App() {
             <h3 className="text-lg font-semibold text-gray-800 mb-2">Natural Speech</h3>
             <p className="text-gray-600 text-sm">
               High-quality text-to-speech synthesis with natural-sounding voice responses
-            </p>
-          </div>
-        </div>
-
-        {/* Instructions */}
-        <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">Getting Started</h3>
-          <div className="space-y-3 text-sm text-gray-600">
-            <div className="flex items-start space-x-3">
-              <div className="w-6 h-6 bg-purple-500 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">1</div>
-              <p>Configure your LiveKit server URL and access token using the settings button (⚙️)</p>
-            </div>
-            <div className="flex items-start space-x-3">
-              <div className="w-6 h-6 bg-purple-500 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">2</div>
-              <p>Make sure your Python voice agent is running: <code className="bg-gray-100 px-2 py-1 rounded">python agent.py dev</code></p>
-            </div>
-            <div className="flex items-start space-x-3">
-              <div className="w-6 h-6 bg-purple-500 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">3</div>
-              <p>Click the green connect button and allow microphone access when prompted</p>
-            </div>
-            <div className="flex items-start space-x-3">
-              <div className="w-6 h-6 bg-purple-500 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">4</div>
-              <p>Start speaking naturally - your voice agent will respond in real-time</p>
-            </div>
-          </div>
-          
-          <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-            <p className="text-amber-800 text-xs">
-              <strong>Note:</strong> If you're in a development environment without microphone access, 
-              you can still connect to test the LiveKit connection. The voice agent will work properly 
-              when deployed to a device with microphone access.
-              The agent should automatically greet you when you connect.
             </p>
           </div>
         </div>

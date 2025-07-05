@@ -51,9 +51,6 @@ const ConfigModal: React.FC<ConfigModalProps> = ({
               placeholder="wss://your-livekit-server.com"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
-            <p className="text-xs text-gray-500 mt-1">
-              例: wss://talktune-exng0106.livekit.cloud
-            </p>
           </div>
 
           <div>
@@ -67,9 +64,6 @@ const ConfigModal: React.FC<ConfigModalProps> = ({
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
-            <p className="text-xs text-gray-500 mt-1">
-              LiveKit Cloudのダッシュボードで生成したアクセストークンを入力してください
-            </p>
           </div>
 
           <div>
@@ -83,19 +77,6 @@ const ConfigModal: React.FC<ConfigModalProps> = ({
               placeholder="voice-agent-room"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
-            <p className="text-xs text-gray-500 mt-1">
-              Pythonエージェントと同じルーム名を使用してください（例: talktune）
-            </p>
-          </div>
-          
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h4 className="text-sm font-semibold text-blue-800 mb-2">📋 設定手順:</h4>
-            <ol className="text-xs text-blue-700 space-y-1">
-              <li>1. <a href="https://cloud.livekit.io/" target="_blank" rel="noopener noreferrer" className="underline">LiveKit Cloud</a> でアクセストークンを生成</li>
-              <li>2. Room Name を "talktune" に設定</li>
-              <li>3. Pythonエージェントが起動していることを確認</li>
-              <li>4. 保存してから接続ボタンをクリック</li>
-            </ol>
           </div>
         </div>
 
