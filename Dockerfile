@@ -2,15 +2,21 @@
 FROM node:18-alpine AS frontend-builder
 
 WORKDIR /app
+
+# Copy package files first for better caching
 COPY package*.json ./
+RUN npm install
+
+# Copy all necessary files for the build
 COPY index.html ./
 COPY vite.config.ts ./
 COPY tsconfig*.json ./
 COPY postcss.config.js ./
 COPY tailwind.config.js ./
+COPY eslint.config.js ./
 COPY src/ ./src/
 
-RUN npm install
+# Build the frontend
 RUN npm run build
 
 # Python backend stage
@@ -22,18 +28,17 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
+# Copy Python requirements and install dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Copy Python files
 COPY agent.py .
 COPY server.py .
 COPY .env.example .env.example
 
 # Copy built frontend from previous stage
 COPY --from=frontend-builder /app/dist ./public
-
-# Install additional Python packages for the server
-RUN pip install fastapi uvicorn python-multipart
 
 EXPOSE 8000 8080
 
