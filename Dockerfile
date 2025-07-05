@@ -3,7 +3,7 @@ FROM node:18-alpine AS frontend-builder
 # Install dependencies for frontend
 WORKDIR /app/frontend
 COPY package*.json ./
-RUN npm ci
+RUN npm install
 
 # Copy frontend source and build
 COPY . .
