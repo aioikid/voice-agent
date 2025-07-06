@@ -157,17 +157,62 @@ export const useLiveKitVoiceAgent = (config: LiveKitConfig) => {
         // Now enable microphone through LiveKit
         console.log('Enabling microphone through LiveKit...');
         
-        // LiveKitに特定のデバイスIDを指定して試行
-        if (audioInputs.length > 0 && audioInputs[0].deviceId) {
-          console.log('Using specific device ID:', audioInputs[0].deviceId);
-          await room.localParticipant.enableCameraAndMicrophone(false, true, {
-            audio: {
-              deviceId: audioInputs[0].deviceId
-            }
-          });
-        } else {
+        // 複数の方法でLiveKitマイクアクセスを試行
+        let microphoneEnabled = false;
+        
+        // 方法1: デフォルトデバイスで試行
+        try {
+          console.log('Trying default device...');
           await room.localParticipant.enableCameraAndMicrophone(false, true);
+          microphoneEnabled = true;
+          console.log('Default device successful');
+        } catch (defaultError) {
+          console.log('Default device failed:', defaultError);
         }
+        
+        // 方法2: 特定のデバイスIDで試行
+        if (!microphoneEnabled && audioInputs.length > 0) {
+          for (const device of audioInputs) {
+            if (device.deviceId && device.deviceId !== 'default') {
+              try {
+                console.log(`Trying device: ${device.label} (${device.deviceId})`);
+                await room.localParticipant.enableCameraAndMicrophone(false, true, {
+                  audio: {
+                    deviceId: { exact: device.deviceId }
+                  }
+                });
+                microphoneEnabled = true;
+                console.log(`Device ${device.label} successful`);
+                break;
+              } catch (deviceError) {
+                console.log(`Device ${device.label} failed:`, deviceError);
+              }
+            }
+          }
+        }
+        
+        // 方法3: より基本的な制約で試行
+        if (!microphoneEnabled) {
+          try {
+            console.log('Trying with basic audio constraints...');
+            await room.localParticipant.enableCameraAndMicrophone(false, true, {
+              audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true
+              }
+            });
+            microphoneEnabled = true;
+            console.log('Basic constraints successful');
+          } catch (basicError) {
+            console.log('Basic constraints failed:', basicError);
+          }
+        }
+        
+        if (!microphoneEnabled) {
+          throw new Error('All microphone access methods failed');
+        }
+        
         console.log('LiveKit microphone enabled successfully');
         
       } catch (permissionError) {
