@@ -267,10 +267,20 @@ function App() {
                         const audioInputsAfter = devicesAfter.filter(device => device.kind === 'audioinput');
                         console.log('Available audio devices (after permission):', audioInputsAfter);
                         
+                        // システム情報も取得
+                        const systemInfo = {
+                          platform: navigator.platform,
+                          userAgent: navigator.userAgent,
+                          language: navigator.language,
+                          onLine: navigator.onLine,
+                          cookieEnabled: navigator.cookieEnabled
+                        };
+                        console.log('System info:', systemInfo);
+                        
                         if (testResult) {
-                          alert(`🎉 マイクアクセス成功！\n\n✅ 成功した方法: ${testResult.method}\n🎤 利用可能なマイク: ${audioInputsAfter.length}個\n🔐 権限状態: ${permissionState}\n📊 アクティブトラック: ${testResult.tracks}個\n\n音声エージェントに接続できます。`);
+                          alert(`🎉 マイクアクセス成功！\n\n✅ 成功した方法: ${testResult.method}\n🎤 利用可能なマイク: ${audioInputsAfter.length}個\n🔐 権限状態: ${permissionState}\n📊 アクティブトラック: ${testResult.tracks}個\n💻 プラットフォーム: ${systemInfo.platform}\n\n音声エージェントに接続できます。`);
                         } else {
-                          alert(`❌ マイクアクセス失敗\n\n🎤 検出されたマイク: ${audioInputsAfter.length}個\n🔐 権限状態: ${permissionState}\n\nブラウザの設定でマイクアクセスを許可してください。`);
+                          alert(`❌ マイクアクセス失敗\n\n🎤 検出されたマイク: ${audioInputsAfter.length}個\n🔐 権限状態: ${permissionState}\n💻 プラットフォーム: ${systemInfo.platform}\n\n🔧 対処法:\n1. マイクが正しく接続されているか確認\n2. システムのサウンド設定を確認\n3. 他のアプリケーションを終了\n4. ブラウザを再起動\n5. 別のブラウザで試行`);
                         }
                       } catch (error) {
                         console.error('Manual microphone test failed:', error);

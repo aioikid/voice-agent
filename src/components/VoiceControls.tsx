@@ -23,6 +23,7 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
       <button
         onClick={isConnected ? onDisconnect : onConnect}
         disabled={isConnecting}
+        title={isConnected ? "音声エージェントから切断" : "音声エージェントに接続"}
         className={`
           relative w-16 h-16 rounded-full flex items-center justify-center
           transition-all duration-200 transform hover:scale-105 active:scale-95
@@ -44,6 +45,7 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
       <button
         onClick={onToggleMute}
         disabled={!isConnected}
+        title={isMuted ? "マイクをオンにする" : "マイクをオフにする"}
         className={`
           relative w-14 h-14 rounded-full flex items-center justify-center
           transition-all duration-200 transform hover:scale-105 active:scale-95
