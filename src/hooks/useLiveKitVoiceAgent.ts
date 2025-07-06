@@ -16,22 +16,16 @@ export const useLiveKitVoiceAgent = (config: LiveKitConfig) => {
   const audioLevelInterval = useRef<NodeJS.Timeout | null>(null);
 
   const updateAudioLevel = useCallback(() => {
-    if (!roomRef.current) return;
-    
+    if (!roomRef.current) {
+      return;
+    }
+
     const p = roomRef.current.localParticipant;
+    // p.audioLevel から音声レベルを取得する
     const level = p.audioLevel;
 
-    // 定期的にレベルをコンソールに出力して確認
-    // レベルが0より大きい（＝何か話している）時だけログに出します
-    if (level > 0.01) {
-      console.log(`Audio level: ${level}, Participant:`, p);
-    }
-    
     setState(prev => ({ ...prev, audioLevel: level }));
-  }, []);
-    
-    setState(prev => ({ ...prev, audioLevel: level }));
-  }, []);
+  }, []); // ← セミコロンが不要なケースでした。申し訳ありません。
 
   const enableMicrophone = useCallback(async (room: Room) => {
     try {
