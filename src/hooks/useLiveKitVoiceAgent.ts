@@ -108,76 +108,178 @@ export const useLiveKitVoiceAgent = (config: LiveKitConfig) => {
         throw new Error('このブラウザではマイクアクセスがサポートされていません');
       }
 
-      // 重要: deviceIdを一切指定せず、ブラウザにデフォルトマイクを選択させる
-      console.log('🎯 デフォルトマイクでアクセス（deviceId指定なし）');
+      // まず利用可能なデバイスを確認
+      console.log('🔍 利用可能なデバイスを確認中...');
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const audioInputs = devices.filter(device => device.kind === 'audioinput');
+      console.log('検出されたオーディオ入力デバイス:', audioInputs.length);
       
-      // LiveKitの標準的な方法でマイクを有効化（deviceId指定なし）
-      await room.localParticipant.enableCameraAndMicrophone(false, true);
+      if (audioInputs.length === 0) {
+        console.warn('⚠️ オーディオ入力デバイスが検出されませんでした');
+        // デバイスが検出されない場合でも、ブラウザのデフォルトを試行
+      }
       
-      console.log('✅ LiveKit標準方法でマイク有効化成功');
+      // 段階的にマイクアクセスを試行
+      let microphoneEnabled = false;
+      
+      // 方法1: LiveKitの標準的な方法（最もシンプル）
+      try {
+        console.log('🎯 方法1: LiveKit標準方法でマイク有効化');
+        await room.localParticipant.enableCameraAndMicrophone(false, true);
+        console.log('✅ LiveKit標準方法成功');
+        microphoneEnabled = true;
+      } catch (liveKitError) {
+        console.log('❌ LiveKit標準方法失敗:', liveKitError);
+      }
+      
+      // 方法2: 直接getUserMediaを使用（制約なし）
+      if (!microphoneEnabled) {
+        try {
+          console.log('🎯 方法2: 直接getUserMedia（制約なし）');
+          const stream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+            video: false
+          });
+          
+          const audioTracks = stream.getAudioTracks();
+          console.log(`✅ 方法2成功: ${audioTracks.length}個のオーディオトラック取得`);
+          
+          if (audioTracks.length > 0) {
+            // LiveKitにトラックを手動で追加
+            await room.localParticipant.publishTrack(audioTracks[0], {
+              name: 'microphone',
+              source: Track.Source.Microphone
+            });
+            console.log('✅ トラック公開成功');
+            microphoneEnabled = true;
+          }
+        } catch (directError) {
+          console.log('❌ 方法2失敗:', directError);
+        }
+      }
+      
+      // 方法3: より柔軟な制約でgetUserMedia
+      if (!microphoneEnabled) {
+        try {
+          console.log('🎯 方法3: 柔軟な制約でgetUserMedia');
+          const stream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+              echoCancellation: false,
+              noiseSuppression: false,
+              autoGainControl: false,
+              sampleRate: 44100,
+              channelCount: 1
+            },
+            video: false
+          });
+          
+          const audioTracks = stream.getAudioTracks();
+          console.log(`✅ 方法3成功: ${audioTracks.length}個のオーディオトラック取得`);
+          
+          if (audioTracks.length > 0) {
+            await room.localParticipant.publishTrack(audioTracks[0], {
+              name: 'microphone',
+              source: Track.Source.Microphone
+            });
+            console.log('✅ トラック公開成功');
+            microphoneEnabled = true;
+          }
+        } catch (flexibleError) {
+          console.log('❌ 方法3失敗:', flexibleError);
+        }
+      }
+      
+      // 方法4: 特定のデバイスIDを指定してgetUserMedia
+      if (!microphoneEnabled && audioInputs.length > 0) {
+        for (const device of audioInputs) {
+          try {
+            console.log(`🎯 方法4: 特定デバイス試行 - ${device.label || device.deviceId}`);
+            const stream = await navigator.mediaDevices.getUserMedia({
+              audio: { deviceId: { exact: device.deviceId } },
+              video: false
+            });
+            
+            const audioTracks = stream.getAudioTracks();
+            console.log(`✅ 方法4成功: デバイス ${device.label || device.deviceId}`);
+            
+            if (audioTracks.length > 0) {
+              await room.localParticipant.publishTrack(audioTracks[0], {
+                name: 'microphone',
+                source: Track.Source.Microphone
+              });
+              console.log('✅ トラック公開成功');
+              microphoneEnabled = true;
+              break;
+            }
+          } catch (deviceError) {
+            console.log(`❌ デバイス ${device.label || device.deviceId} 失敗:`, deviceError);
+          }
+        }
+      }
+      
+      // 方法5: 最後の手段 - 最小限の制約
+      if (!microphoneEnabled) {
+        try {
+          console.log('🎯 方法5: 最小限の制約でgetUserMedia');
+          const stream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+              mandatory: {},
+              optional: []
+            } as any,
+            video: false
+          });
+          
+          const audioTracks = stream.getAudioTracks();
+          console.log(`✅ 方法5成功: ${audioTracks.length}個のオーディオトラック取得`);
+          
+          if (audioTracks.length > 0) {
+            await room.localParticipant.publishTrack(audioTracks[0], {
+              name: 'microphone',
+              source: Track.Source.Microphone
+            });
+            console.log('✅ トラック公開成功');
+            microphoneEnabled = true;
+          }
+        } catch (minimalError) {
+          console.log('❌ 方法5失敗:', minimalError);
+        }
+      }
+      
+      if (microphoneEnabled) {
+        console.log('🎉 マイク有効化完了');
+      } else {
+        throw new Error('すべてのマイクアクセス方法が失敗しました');
+      }
       
     } catch (error) {
-      console.error('❌ LiveKit標準方法失敗、フォールバック実行:', error);
+      console.error('❌ マイク有効化失敗:', error);
       
-      // フォールバック: 直接getUserMediaを使用（deviceId指定なし）
-      try {
-        console.log('🔄 フォールバック: 直接getUserMedia（deviceId指定なし）');
+      if (error instanceof Error) {
+        let errorMessage = '';
         
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: true,  // deviceIdを一切指定しない
-          video: false
-        });
-        
-        const audioTracks = stream.getAudioTracks();
-        console.log(`✅ フォールバック成功: ${audioTracks.length}個のオーディオトラック取得`);
-        
-        if (audioTracks.length > 0) {
-          const track = audioTracks[0];
-          console.log('🎵 取得したトラック:', {
-            label: track.label,
-            enabled: track.enabled,
-            readyState: track.readyState
-          });
-          
-          // LiveKitにトラックを手動で追加
-          await room.localParticipant.publishTrack(track, {
-            name: 'microphone',
-            source: Track.Source.Microphone
-          });
-          
-          console.log('✅ フォールバック: トラック公開成功');
+        switch (error.name) {
+          case 'NotAllowedError':
+            errorMessage = 'マイクアクセスが拒否されました。ブラウザの設定でマイクアクセスを許可してください。';
+            break;
+          case 'NotFoundError':
+            errorMessage = 'マイクが見つかりません。以下を確認してください：\n1. マイクが正しく接続されている\n2. システムのサウンド設定でマイクが認識されている\n3. 他のアプリケーション（Zoom、Teams等）でマイクを使用していない\n4. ブラウザを再起動してみる';
+            break;
+          case 'NotReadableError':
+            errorMessage = 'マイクが他のアプリケーションで使用されています。他のアプリを閉じてから再試行してください。';
+            break;
+          case 'OverconstrainedError':
+            errorMessage = 'マイクの設定に問題があります。ブラウザを再起動してお試しください。';
+            break;
+          default:
+            errorMessage = `マイクアクセスエラー: ${error.message}\n\n対処法：\n1. ブラウザを再起動\n2. PCを再起動\n3. 別のブラウザで試行\n4. マイクの接続を確認`;
         }
         
-      } catch (fallbackError) {
-        console.error('❌ フォールバックも失敗:', fallbackError);
-        
-        if (fallbackError instanceof Error) {
-          let errorMessage = '';
-          
-          switch (fallbackError.name) {
-            case 'NotAllowedError':
-              errorMessage = 'マイクアクセスが拒否されました。ブラウザの設定でマイクアクセスを許可してください。';
-              break;
-            case 'NotFoundError':
-              errorMessage = 'マイクが見つかりません。マイクが接続されていることを確認してください。';
-              break;
-            case 'NotReadableError':
-              errorMessage = 'マイクが他のアプリケーションで使用されています。他のアプリを閉じてから再試行してください。';
-              break;
-            case 'OverconstrainedError':
-              errorMessage = 'マイクの設定に問題があります。ブラウザを再起動してお試しください。';
-              break;
-            default:
-              errorMessage = `マイクアクセスエラー: ${fallbackError.message}`;
-          }
-          
-          setState(prev => ({ ...prev, error: errorMessage }));
-        } else {
-          setState(prev => ({ 
-            ...prev, 
-            error: 'マイクアクセスに失敗しました。ブラウザを再起動してお試しください。' 
-          }));
-        }
+        setState(prev => ({ ...prev, error: errorMessage }));
+      } else {
+        setState(prev => ({ 
+          ...prev, 
+          error: 'マイクアクセスに失敗しました。ブラウザを再起動してお試しください。' 
+        }));
       }
     }
   }, []);
