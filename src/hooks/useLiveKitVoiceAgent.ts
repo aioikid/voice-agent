@@ -95,50 +95,68 @@ export const useLiveKitVoiceAgent = (config: LiveKitConfig) => {
 
   const enableMicrophone = useCallback(async (room: Room) => {
     try {
-      // Check if we're on HTTPS
-      if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
-        setState(prev => ({ 
-          ...prev, 
-          error: 'マイクアクセスにはHTTPS接続が必要です。https://talktune.biz でアクセスしてください。' 
-        }));
-        return;
-      }
-
+      // Check if getUserMedia is available
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        console.warn('getUserMedia not supported in this browser');
         setState(prev => ({ 
           ...prev, 
-          error: 'このブラウザではマイクアクセスがサポートされていません。' 
+          error: 'このブラウザではマイクアクセスがサポートされていません。Chrome、Firefox、Safari等の最新ブラウザをご利用ください。' 
         }));
         return;
       }
 
-      await room.localParticipant.enableCameraAndMicrophone(false, true);
+      // First, request microphone permission explicitly
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        console.log('Microphone permission granted');
+        
+        // Stop the test stream
+        stream.getTracks().forEach(track => track.stop());
+        
+        // Now enable microphone through LiveKit
+        await room.localParticipant.enableCameraAndMicrophone(false, true);
+        console.log('LiveKit microphone enabled successfully');
+        
+      } catch (permissionError) {
+        console.error('Microphone permission error:', permissionError);
+        
+        if (permissionError instanceof Error) {
+          if (permissionError.name === 'NotAllowedError') {
+            setState(prev => ({ 
+              ...prev, 
+              error: 'マイクアクセスが拒否されました。ブラウザの設定でマイクアクセスを許可してください。' 
+            }));
+          } else if (permissionError.name === 'NotFoundError') {
+            setState(prev => ({ 
+              ...prev, 
+              error: 'マイクが見つかりません。マイクが接続されていることを確認してください。' 
+            }));
+          } else if (permissionError.name === 'NotReadableError') {
+            setState(prev => ({ 
+              ...prev, 
+              error: 'マイクが他のアプリケーションで使用されています。他のアプリを閉じてから再試行してください。' 
+            }));
+          } else if (permissionError.name === 'OverconstrainedError') {
+            setState(prev => ({ 
+              ...prev, 
+              error: 'マイクの設定に問題があります。ブラウザを再起動してお試しください。' 
+            }));
+          } else {
+            setState(prev => ({ 
+              ...prev, 
+              error: `マイクアクセスエラー: ${permissionError.message}` 
+            }));
+          }
+        }
+        return;
+      }
       
     } catch (error) {
-      console.warn('Microphone not available in this environment:', error);
-      if (error instanceof Error) {
-        if (error.name === 'NotAllowedError') {
-          setState(prev => ({ 
-            ...prev, 
-            error: 'マイクアクセスが拒否されました。ブラウザでマイクアクセスを許可してください。' 
-          }));
-        } else if (error.name === 'NotFoundError') {
-          setState(prev => ({ 
-            ...prev, 
-            error: 'マイクが見つかりません。HTTPSでアクセスするか、マイクが接続されていることを確認してください。' 
-          }));
-        } else if (error.name === 'NotReadableError') {
-          setState(prev => ({ 
-            ...prev, 
-            error: 'マイクが他のアプリケーションで使用されています。' 
-          }));
-        } else {
-          setState(prev => ({ 
-            ...prev, 
-            error: 'マイクアクセスエラー: HTTPSでアクセスしてください。' 
-          }));
-        }
-      }
+      console.error('LiveKit microphone setup failed:', error);
+      setState(prev => ({ 
+        ...prev, 
+        error: 'LiveKitマイクセットアップに失敗しました。ページを更新してお試しください。' 
+      }));
     }
   }, []);
 

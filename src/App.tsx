@@ -92,86 +92,52 @@ function App() {
                 <div>
                   <p className="text-yellow-800 text-sm font-medium">接続の問題</p>
                   <p className="text-yellow-700 text-sm">{state.error}</p>
-                  {state.error.includes('HTTPS') && (
+                  {state.error.includes('マイクアクセスが拒否') && (
                     <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                      <p className="text-blue-800 text-sm font-medium">🔒 HTTPS接続が必要です</p>
-                      <p className="text-blue-700 text-sm mb-2">
-                        マイクアクセスにはHTTPS接続が必要です。以下のリンクからアクセスしてください：
-                      </p>
-                      <a 
-                        href="https://talktune.biz" 
-                        className="inline-block px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        HTTPS版にアクセス
-                      </a>
+                      <p className="text-blue-800 text-sm font-medium">🎤 マイクアクセス許可方法</p>
+                      <div className="text-blue-700 text-sm mt-2">
+                        <p className="font-medium mb-2">Chrome/Edge:</p>
+                        <ol className="list-decimal list-inside space-y-1 ml-2">
+                          <li>アドレスバー左側の🔒マークをクリック</li>
+                          <li>「マイク」を「許可」に変更</li>
+                          <li>ページを更新</li>
+                        </ol>
+                        <p className="font-medium mb-2 mt-3">Firefox:</p>
+                        <ol className="list-decimal list-inside space-y-1 ml-2">
+                          <li>アドレスバー左側の盾マークをクリック</li>
+                          <li>「マイクロフォン」の権限を許可</li>
+                          <li>ページを更新</li>
+                        </ol>
+                      </div>
                     </div>
                   )}
-                  {state.error.includes('HTTPS') && (
-                    <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                      <p className="text-blue-800 text-sm font-medium">🔒 HTTPS接続が必要です</p>
-                      <p className="text-blue-700 text-sm mb-2">
-                        マイクアクセスにはHTTPS接続が必要です。以下のリンクからアクセスしてください：
-                      </p>
-                      <a 
-                        href="https://talktune.biz" 
-                        className="inline-block px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        HTTPS版にアクセス
-                      </a>
+                  {state.error.includes('マイクが見つかりません') && (
+                    <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                      <p className="text-amber-800 text-sm font-medium">🔧 マイク接続確認</p>
+                      <div className="text-amber-700 text-sm mt-2">
+                        <ul className="list-disc list-inside space-y-1">
+                          <li>マイクが正しく接続されているか確認</li>
+                          <li>他のアプリケーション（Zoom、Teams等）を閉じる</li>
+                          <li>ブラウザを再起動</li>
+                          <li>システムのマイク設定を確認</li>
+                        </ul>
+                      </div>
                     </div>
                   )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* HTTPS Notice */}
-          {!state.error && window.location.protocol === 'http:' && (
-            <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-              <div className="flex items-start space-x-2">
-                <div className="text-amber-600 mt-0.5">🔒</div>
-                <div>
-                  <p className="text-amber-800 text-sm font-medium">マイクアクセスにはHTTPS接続が推奨されます</p>
-                  <p className="text-amber-700 text-sm mb-3">
-                    現在HTTP接続のため、マイクアクセスが制限される可能性があります。
-                    完全な機能を利用するにはHTTPS版をご利用ください。
-                  </p>
-                  <a 
-                    href="https://talktune.biz" 
-                    className="inline-block px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors text-sm"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    HTTPS版にアクセス
-                  </a>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* HTTPS Notice */}
-          {!state.error && window.location.protocol === 'http:' && (
-            <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-              <div className="flex items-start space-x-2">
-                <div className="text-amber-600 mt-0.5">🔒</div>
-                <div>
-                  <p className="text-amber-800 text-sm font-medium">マイクアクセスにはHTTPS接続が推奨されます</p>
-                  <p className="text-amber-700 text-sm mb-3">
-                    現在HTTP接続のため、マイクアクセスが制限される可能性があります。
-                    完全な機能を利用するにはHTTPS版をご利用ください。
-                  </p>
-                  <a 
-                    href="https://talktune.biz" 
-                    className="inline-block px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors text-sm"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    HTTPS版にアクセス
-                  </a>
+                  {state.error.includes('他のアプリケーション') && (
+                    <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                      <p className="text-red-800 text-sm font-medium">🚫 マイク使用中</p>
+                      <div className="text-red-700 text-sm mt-2">
+                        <p>以下のアプリケーションを閉じてから再試行してください：</p>
+                        <ul className="list-disc list-inside space-y-1 mt-1">
+                          <li>Zoom、Microsoft Teams、Skype</li>
+                          <li>他のブラウザタブでの音声通話</li>
+                          <li>録音アプリケーション</li>
+                          <li>音声認識ソフト</li>
+                        </ul>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -187,6 +153,45 @@ function App() {
                   <p className="text-blue-700 text-sm">
                     AIエージェントが接続されました。数秒後に挨拶が聞こえるはずです。
                   </p>
+                  <div className="mt-2 text-xs text-blue-600">
+                    <p><strong>マイクが動作しない場合:</strong></p>
+                    <ul className="list-disc list-inside space-y-1 mt-1">
+                      <li>ブラウザでマイクアクセスを許可してください</li>
+                      <li>他のアプリケーション（Zoom、Teams等）を閉じてください</li>
+                      <li>ページを更新してから再接続してください</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Microphone Test */}
+          {!state.error && !state.isConnected && (
+            <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <div className="flex items-start space-x-2">
+                <div className="text-green-600 mt-0.5">🎤</div>
+                <div>
+                  <p className="text-green-800 text-sm font-medium">マイクテスト</p>
+                  <p className="text-green-700 text-sm mb-3">
+                    接続前にマイクが正常に動作するかテストできます。
+                  </p>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        alert('マイクアクセス成功！音声エージェントに接続できます。');
+                        stream.getTracks().forEach(track => track.stop());
+                      } catch (error) {
+                        if (error instanceof Error) {
+                          alert(`マイクアクセス失敗: ${error.message}`);
+                        }
+                      }
+                    }}
+                    className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm"
+                  >
+                    マイクテスト
+                  </button>
                 </div>
               </div>
             </div>
