@@ -12,19 +12,15 @@ export const useLiveKitVoiceAgent = (config: LiveKitConfig) => {
     error: null,
   });
 
-  // RoomオブジェクトをuseRefで管理
   const roomRef = useRef<Room>(new Room());
   const audioLevelInterval = useRef<NodeJS.Timeout | null>(null);
 
   const updateAudioLevel = useCallback(() => {
     const room = roomRef.current;
-    if (!room) {
+    if (!room || !room.localParticipant) {
       return;
     }
-    const p = room.localParticipant;
-    const level = p.audioLevel;
-    
-    // UI表示用に音声レベルを更新
+    const level = room.localParticipant.audioLevel;
     setState(prev => ({ ...prev, audioLevel: level }));
   }, []);
 
@@ -32,7 +28,6 @@ export const useLiveKitVoiceAgent = (config: LiveKitConfig) => {
     setState(prev => ({ ...prev, isConnecting: true, error: null }));
 
     try {
-      // サーバーの/tokenエンドポイントにリクエストしてトークンを取得
       const response = await fetch(`/token?room_name=${roomName}&identity=${identity}`);
       if (!response.ok) {
         const errorText = await response.text();
@@ -43,11 +38,10 @@ export const useLiveKitVoiceAgent = (config: LiveKitConfig) => {
       
       const room = roomRef.current;
 
-      // ルームイベントのリスナーを設定
       room
         .on(RoomEvent.Disconnected, () => {
           console.log('🔌 Room disconnected');
-          setState(prev => ({ ...prev, isConnected: false, isConnecting: false, isListening: false }));
+          setState(prev => ({ ...prev, isConnected: false, isConnecting: false, isListening: false, audioLevel: 0 }));
           if (audioLevelInterval.current) {
             clearInterval(audioLevelInterval.current);
           }
@@ -63,18 +57,14 @@ export const useLiveKitVoiceAgent = (config: LiveKitConfig) => {
             track.detach().forEach(element => element.remove());
         });
 
-      // 取得したトークンでLiveKitに接続
       await room.connect(config.url, token);
       console.log('✅ Room connected successfully');
       
-      // 接続完了後の状態更新
       setState(prev => ({ ...prev, isConnected: true, isConnecting: false }));
 
-      // マイクを有効化
       await room.localParticipant.setMicrophoneEnabled(true);
       console.log('✅ Microphone enabled');
       
-      // オーディオレベルの監視を開始
       if (audioLevelInterval.current) clearInterval(audioLevelInterval.current);
       audioLevelInterval.current = setInterval(updateAudioLevel, 200);
 
@@ -86,31 +76,29 @@ export const useLiveKitVoiceAgent = (config: LiveKitConfig) => {
         error: error instanceof Error ? error.message : 'Connection failed'
       }));
     }
-  }, [config.url, updateAudioLevel]); // 依存配列を修正
+  }, [config.url, updateAudioLevel]);
 
   const disconnect = useCallback(() => {
     if (roomRef.current) {
       roomRef.current.disconnect();
-      console.log('🔌 Disconnecting from room...');
-    }
-    if (audioLevelInterval.current) {
-        clearInterval(audioLevelInterval.current);
     }
   }, []);
 
   const toggleMute = useCallback(() => {
-    if (roomRef.current) {
-      const isMuted = roomRef.current.localParticipant.isMicrophoneEnabled;
-      roomRef.current.localParticipant.setMicrophoneEnabled(!isMuted);
-      setState(prev => ({ ...prev, isMuted: !isMuted }));
+    const room = roomRef.current;
+    if (room && room.localParticipant) {
+      const newMutedState = !room.localParticipant.isMicrophoneEnabled;
+      room.localParticipant.setMicrophoneEnabled(newMutedState);
+      setState(prev => ({ ...prev, isMuted: newMutedState }));
     }
   }, []);
 
   useEffect(() => {
+    const room = roomRef.current;
     return () => {
-      disconnect();
+      room.disconnect();
     };
-  }, [disconnect]);
+  }, []);
 
   return {
     state,
