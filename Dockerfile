@@ -34,15 +34,13 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy Python files
 COPY agent.py .
-COPY server.py .
 COPY .env.example .env.example
 
-# Copy built frontend from previous stage
-COPY --from=frontend-builder /app/dist ./public
+# Copy built frontend from previous stage to the correct directory "dist"
+COPY --from=frontend-builder /app/dist ./dist
 
-EXPOSE 8000 8080
+EXPOSE 8000
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
-
+# HEALTHCHECK is removed
+# CMD ["python", "agent.py", "start"] is changed to "agent.py"
 CMD ["python", "agent.py"]
