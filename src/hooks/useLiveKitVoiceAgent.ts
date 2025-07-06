@@ -64,69 +64,34 @@ export const useLiveKitVoiceAgent = (config: LiveKitConfig) => {
     }
   }, []);
 
-  const connect = useCallback(async () => {
-    if (!config.url || !config.token) {
-      setState(prev => ({ ...prev, error: 'Missing configuration' }));
-      return;
-    }
-
+  const connect = useCallback(async (roomName: string, identity: string) => {
     setState(prev => ({ ...prev, isConnecting: true, error: null }));
 
     try {
-      const room = new Room();
-      roomRef.current = room;
+      // サーバーの/tokenエンドポイントにリクエスト
+      const response = await fetch(`/token?room_name=${roomName}&identity=${identity}`);
+      if (!response.ok) {
+        throw new Error(`Failed to get token: ${response.statusText}`);
+      }
+      const data = await response.json();
+      const token = data.token;
+      
+      // 取得したトークンでLiveKitに接続
+      await roomRef.current.connect(config.url, token);
 
-      room.on(RoomEvent.Connected, () => {
-        console.log('✅ Room connected successfully');
-        setState(prev => ({ ...prev, isConnected: true, isConnecting: false }));
-        audioLevelInterval.current = setInterval(updateAudioLevel, 100);
-        enableMicrophone(room);
-      });
+      setState(prev => ({ ...prev, isConnected: true, isConnecting: false }));
+      // ...（マイク有効化などの処理はここから）...
+      roomRef.current.localParticipant.setMicrophoneEnabled(true);
 
-      room.on(RoomEvent.Disconnected, () => {
-        console.log('🔌 Room disconnected');
-        setState(prev => ({ 
-          ...prev, 
-          isConnected: false, 
-          isConnecting: false,
-          isListening: false
-        }));
-        
-        if (audioLevelInterval.current) {
-          clearInterval(audioLevelInterval.current);
-          audioLevelInterval.current = null;
-        }
-      });
-
-      room.on(RoomEvent.TrackSubscribed, (track: RemoteTrack) => {
-        console.log('📥 Track subscribed:', track.kind);
-        if (track.kind === Track.Kind.Audio) {
-          setState(prev => ({ ...prev, isListening: true }));
-          const audioElement = track.attach();
-          if (audioElement) {
-            audioElement.autoplay = true;
-            audioElement.volume = 1.0;
-            document.body.appendChild(audioElement);
-            console.log('🔊 Audio element attached and playing');
-          }
-        }
-      });
-
-      room.on(RoomEvent.TrackUnsubscribed, (track: RemoteTrack) => {
-        console.log('📤 Track unsubscribed:', track.kind);
-        if (track.kind === Track.Kind.Audio) {
-          setState(prev => ({ ...prev, isListening: false }));
-          const audioElements = document.querySelectorAll('audio');
-          audioElements.forEach(element => {
-            if (element.srcObject === track.mediaStream) {
-              element.remove();
-            }
-          });
-        }
-      });
-
-      console.log('🔗 Connecting to room...');
-      await room.connect(config.url, config.token);
+    } catch (error) {
+      console.error('Failed to connect:', error);
+      setState(prev => ({ 
+        ...prev, 
+        isConnecting: false, 
+        error: error instanceof Error ? error.message : 'Connection failed'
+      }));
+    }
+  }, [config]);
       
     } catch (error) {
       console.error('❌ Failed to connect:', error);
