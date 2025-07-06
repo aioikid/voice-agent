@@ -18,11 +18,10 @@ export const useLiveKitVoiceAgent = (config: LiveKitConfig) => {
   const updateAudioLevel = useCallback(() => {
     if (!roomRef.current) return;
 
-    // audioTrackPublications を forEach でループさせる
     roomRef.current.localParticipant.audioTrackPublications.forEach((publication) => {
-      // publication.track が存在し、それがオーディオトラックであることを確認
-      if (publication.track && publication.track.kind === Track.Kind.Audio) {
-        const level = publication.track.getAudioLevel();
+      // publicationに .track は不要です
+      if (publication.kind === Track.Kind.Audio && publication.track) {
+        const level = publication.getAudioLevel(); // 'publication'から直接呼び出す
         setState(prev => ({ ...prev, audioLevel: level }));
       }
     });
