@@ -150,13 +150,15 @@ export const useLiveKitVoiceAgent = (config: LiveKitConfig) => {
 
   const toggleMute = useCallback(() => {
     if (roomRef.current) {
-      const audioTrack = roomRef.current.localParticipant.audioTrackPublications.values().next().value?.track;
-      if (audioTrack) {
-        const newMutedState = !audioTrack.isMuted;
-        audioTrack.setMuted(newMutedState);
-        setState(prev => ({ ...prev, isMuted: newMutedState }));
-        console.log('🔇 Microphone muted:', newMutedState);
-      }
+      // audioTrackPublications をループして、公開されているオーディオトラックを操作する
+      roomRef.current.localParticipant.audioTrackPublications.forEach((publication) => {
+        if (publication.track) {
+          const newMutedState = !publication.track.isMuted;
+          publication.track.setMuted(newMutedState);
+          setState(prev => ({ ...prev, isMuted: newMutedState }));
+          console.log('🔇 Microphone muted:', newMutedState);
+        }
+      });
     }
   }, []);
 
