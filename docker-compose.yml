@@ -1,35 +1,26 @@
-version: '3.8'
-
 services:
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    restart: unless-stopped
+    depends_on:
+      - voice-agent
+
   voice-agent:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    volumes:
+      - ./.env:/app/.env
     ports:
       - "8000:8000"
-      - "8080:8080"
-    environment:
-      - LIVEKIT_API_KEY=${LIVEKIT_API_KEY}
-      - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}
-      - LIVEKIT_URL=${LIVEKIT_URL}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - DEFAULT_ROOM_NAME=${DEFAULT_ROOM_NAME:-talktune}
-    volumes:
-      - ./logs:/app/logs
-    restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
-
-  # Optional: Nginx reverse proxy
-  nginx:
-  build:
-    context: .
-    dockerfile: Dockerfile.nginx
-  ports:
-    - "80:80"
-    - "443:443"
-  restart: unless-stopped
-  depends_on:
-    - voice-agent
