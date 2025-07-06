@@ -74,7 +74,7 @@ app.mount("/assets", StaticFiles(directory="dist/assets"), name="assets")
 async def serve_frontend(full_path: str):
     # パスが指定されていない場合は index.html を返す
     if not full_path or full_path == "/":
-        return FileResponse("dist/index.html")
+        return FileResponse("public/index.html")
     
     # ファイルが存在する場合はそれを返す
     file_path = f"dist/{full_path}"
@@ -82,7 +82,7 @@ async def serve_frontend(full_path: str):
         return FileResponse(file_path)
 
     # それ以外の場合（React Routerが処理するパス）は index.html を返す
-    return FileResponse("dist/index.html")
+    return FileResponse("public/index.html")
 
 # --- メインの実行部分 ---
 if __name__ == "__main__":
