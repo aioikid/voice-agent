@@ -194,7 +194,7 @@ location: https://talktune.biz/
 ### 4-3. SSL証明書の詳細確認
 ```bash
 # SSL証明書の詳細を確認
-openssl s_client -connect talktune.biz:443 -servername talktune.biz | head -20
+  
 ```
 
 ---
