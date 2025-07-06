@@ -2,19 +2,28 @@ services:
   nginx:
     build:
       context: .
-      dockerfile: Dockerfile.nginx # これは前回作成したものでOK
+      dockerfile: Dockerfile.nginx
     ports:
       - "80:80"
       - "443:443"
     restart: unless-stopped
     depends_on:
-      - voice-agent
+      - web # 'voice-agent'から'web'に変更
 
-  voice-agent:
+  web:
     build:
       context: .
-      dockerfile: Dockerfile # メインのDockerfile
+      dockerfile: Dockerfile
+    command: ["python", "server.py"] # server.py を起動
     restart: unless-stopped
     volumes:
       - ./.env:/app/.env
-    # ports はnginxが担当するので不要
+
+  agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["python", "agent.py", "start"] # agent.py を起動
+    restart: unless-stopped
+    volumes:
+      - ./.env:/app/.env
