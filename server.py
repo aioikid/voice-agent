@@ -41,7 +41,12 @@ def start_agent():
         except:
             agent_process.kill()
             agent_process.wait()
-    
+
+  　　　# 現在の環境変数をコピー
+　　　　env = os.environ.copy()
+　　　　# AIエージェントが参加するルーム名を指定
+　　　　env["LIVEKIT_ROOM"] = "talktune"
+  
     try:
         # "dev" を "start" に変更
         agent_process = subprocess.Popen(
@@ -50,6 +55,7 @@ def start_agent():
             stderr=subprocess.PIPE,
             text=True,
             bufsize=1
+          　env=env
         )
         
         stdout_thread = threading.Thread(target=log_pipe, args=[agent_process.stdout, "INFO"], daemon=True)
