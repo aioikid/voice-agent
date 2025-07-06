@@ -8,22 +8,12 @@ services:
       - "443:443"
     restart: unless-stopped
     depends_on:
-      - web # 'voice-agent'から'web'に変更
+      - voice-agent
 
-  web:
+  voice-agent:
     build:
       context: .
       dockerfile: Dockerfile
-    command: ["python", "server.py"] # server.py を起動
-    restart: unless-stopped
-    volumes:
-      - ./.env:/app/.env
-
-  agent:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    command: ["python", "agent.py", "start"] # agent.py を起動
     restart: unless-stopped
     volumes:
       - ./.env:/app/.env
