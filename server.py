@@ -39,7 +39,7 @@ def start_agent():
     
     try:
         agent_process = subprocess.Popen(
-            ["python", "agent.py", "dev"],
+            ["python", "agent.py", "start"],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True
