@@ -179,12 +179,25 @@ function App() {
                   <button
                     onClick={async () => {
                       try {
+                        console.log('Manual microphone test started');
+                        
+                        // デバイス一覧を確認
+                        const devices = await navigator.mediaDevices.enumerateDevices();
+                        const audioInputs = devices.filter(device => device.kind === 'audioinput');
+                        console.log('Available audio devices:', audioInputs);
+                        
+                        // 権限状態を確認
+                        const permission = await navigator.permissions.query({ name: 'microphone' as PermissionName });
+                        console.log('Microphone permission state:', permission.state);
+                        
                         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                        alert('マイクアクセス成功！音声エージェントに接続できます。');
+                        console.log('Microphone test successful:', stream);
+                        alert(`マイクアクセス成功！\n利用可能なマイク: ${audioInputs.length}個\n権限状態: ${permission.state}\n音声エージェントに接続できます。`);
                         stream.getTracks().forEach(track => track.stop());
                       } catch (error) {
+                        console.error('Manual microphone test failed:', error);
                         if (error instanceof Error) {
-                          alert(`マイクアクセス失敗: ${error.message}`);
+                          alert(`マイクアクセス失敗:\nエラー名: ${error.name}\nメッセージ: ${error.message}\n\nブラウザの設定でマイクアクセスを許可してください。`);
                         }
                       }
                     }}

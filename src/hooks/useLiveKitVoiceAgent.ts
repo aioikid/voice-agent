@@ -95,56 +95,92 @@ export const useLiveKitVoiceAgent = (config: LiveKitConfig) => {
 
   const enableMicrophone = useCallback(async (room: Room) => {
     try {
-      // Check if getUserMedia is available
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        console.warn('getUserMedia not supported in this browser');
-        setState(prev => ({ 
-          ...prev, 
-          error: 'このブラウザではマイクアクセスがサポートされていません。Chrome、Firefox、Safari等の最新ブラウザをご利用ください。' 
-        }));
-        return;
+      // より詳細なマイクアクセス診断を実行
+      console.log('Starting microphone access...');
+      console.log('Navigator.mediaDevices available:', !!navigator.mediaDevices);
+      console.log('getUserMedia available:', !!navigator.mediaDevices?.getUserMedia);
+      
+      if (!navigator.mediaDevices?.getUserMedia) {
+        throw new Error('getUserMedia is not supported in this browser');
       }
 
-      // First, request microphone permission explicitly
+      // デバイス一覧を取得して確認
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const audioInputs = devices.filter(device => device.kind === 'audioinput');
+      console.log('Available audio input devices:', audioInputs);
+      
+      if (audioInputs.length === 0) {
+        throw new Error('No audio input devices found');
+      }
+
+      // より具体的な制約でマイクアクセスを試行
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        console.log('Microphone permission granted');
+        console.log('Requesting microphone access...');
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+            sampleRate: 48000
+          } 
+        });
+        console.log('Microphone access granted successfully');
+        console.log('Stream tracks:', stream.getTracks());
         
         // Stop the test stream
         stream.getTracks().forEach(track => track.stop());
         
         // Now enable microphone through LiveKit
+        console.log('Enabling microphone through LiveKit...');
         await room.localParticipant.enableCameraAndMicrophone(false, true);
         console.log('LiveKit microphone enabled successfully');
         
       } catch (permissionError) {
-        console.error('Microphone permission error:', permissionError);
+        console.error('Microphone access error:', permissionError);
+        console.error('Error name:', permissionError.name);
+        console.error('Error message:', permissionError.message);
         
         if (permissionError instanceof Error) {
           if (permissionError.name === 'NotAllowedError') {
             setState(prev => ({ 
               ...prev, 
-              error: 'マイクアクセスが拒否されました。ブラウザの設定でマイクアクセスを許可してください。' 
+              error: 'マイクアクセスが拒否されました。ブラウザのアドレスバー左側の🔒マークをクリックして、マイクを「許可」に設定してください。' 
             }));
           } else if (permissionError.name === 'NotFoundError') {
             setState(prev => ({ 
               ...prev, 
-              error: 'マイクが見つかりません。マイクが接続されていることを確認してください。' 
+              error: `マイクデバイスが見つかりません。利用可能なデバイス数: ${audioInputs.length}。システムのマイク設定を確認してください。` 
             }));
           } else if (permissionError.name === 'NotReadableError') {
             setState(prev => ({ 
               ...prev, 
-              error: 'マイクが他のアプリケーションで使用されています。他のアプリを閉じてから再試行してください。' 
+              error: 'マイクが他のアプリケーション（Zoom、Teams等）で使用中です。他のアプリを閉じてブラウザを再起動してください。' 
             }));
           } else if (permissionError.name === 'OverconstrainedError') {
             setState(prev => ({ 
               ...prev, 
-              error: 'マイクの設定に問題があります。ブラウザを再起動してお試しください。' 
+              error: 'マイクの制約設定に問題があります。より基本的な設定で再試行します。' 
             }));
+            
+            // より基本的な制約で再試行
+            try {
+              console.log('Retrying with basic audio constraints...');
+              const basicStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+              console.log('Basic microphone access successful');
+              basicStream.getTracks().forEach(track => track.stop());
+              await room.localParticipant.enableCameraAndMicrophone(false, true);
+              console.log('LiveKit microphone enabled with basic settings');
+            } catch (retryError) {
+              console.error('Retry failed:', retryError);
+              setState(prev => ({ 
+                ...prev, 
+                error: `マイクアクセスに失敗しました: ${retryError.message}` 
+              }));
+            }
           } else {
             setState(prev => ({ 
               ...prev, 
-              error: `マイクアクセスエラー: ${permissionError.message}` 
+              error: `マイクアクセスエラー (${permissionError.name}): ${permissionError.message}` 
             }));
           }
         }
@@ -155,7 +191,7 @@ export const useLiveKitVoiceAgent = (config: LiveKitConfig) => {
       console.error('LiveKit microphone setup failed:', error);
       setState(prev => ({ 
         ...prev, 
-        error: 'LiveKitマイクセットアップに失敗しました。ページを更新してお試しください。' 
+        error: `LiveKitマイクセットアップエラー: ${error instanceof Error ? error.message : 'Unknown error'}` 
       }));
     }
   }, []);
