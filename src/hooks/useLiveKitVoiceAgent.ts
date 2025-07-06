@@ -18,11 +18,14 @@ export const useLiveKitVoiceAgent = (config: LiveKitConfig) => {
   const updateAudioLevel = useCallback(() => {
     if (!roomRef.current) return;
 
-    const localTrack = roomRef.current.localParticipant.audioTrackPublications.values().next().value?.track;
-    if (localTrack && localTrack.kind === Track.Kind.Audio) {
-      const level = localTrack.getAudioLevel();
-      setState(prev => ({ ...prev, audioLevel: level }));
-    }
+    // audioTrackPublications を forEach でループさせる
+    roomRef.current.localParticipant.audioTrackPublications.forEach((publication) => {
+      // publication.track が存在し、それがオーディオトラックであることを確認
+      if (publication.track && publication.track.kind === Track.Kind.Audio) {
+        const level = publication.track.getAudioLevel();
+        setState(prev => ({ ...prev, audioLevel: level }));
+      }
+    });
   }, []);
 
   const enableMicrophone = useCallback(async (room: Room) => {
