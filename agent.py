@@ -54,6 +54,4 @@ class VoiceAssistant(agents.Agent):
 
 # --- スクリプト実行のエントリーポイント ---
 if __name__ == "__main__":
-    # Workerを起動し、LiveKit Cloudからのジョブを待つ
-    # Workerは、新しいルームへの参加要求があるたびに、VoiceAssistantの新しいインスタンスを作成する
-    agents.cli.run_app(agents.WorkerOptions(agent_cls=VoiceAssistant))
+    agents.cli.run_agent(VoiceAssistant)
