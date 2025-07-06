@@ -17,9 +17,18 @@ export const useLiveKitVoiceAgent = (config: LiveKitConfig) => {
 
   const updateAudioLevel = useCallback(() => {
     if (!roomRef.current) return;
+    
+    const p = roomRef.current.localParticipant;
+    const level = p.audioLevel;
 
-    // ローカル参加者の音声レベルを直接取得する
-    const level = roomRef.current.localParticipant.audioLevel;
+    // 定期的にレベルをコンソールに出力して確認
+    // レベルが0より大きい（＝何か話している）時だけログに出します
+    if (level > 0.01) {
+      console.log(`Audio level: ${level}, Participant:`, p);
+    }
+    
+    setState(prev => ({ ...prev, audioLevel: level }));
+  }, []);
     
     setState(prev => ({ ...prev, audioLevel: level }));
   }, []);
