@@ -95,8 +95,20 @@ export const useLiveKitVoiceAgent = (config: LiveKitConfig) => {
 
   const enableMicrophone = useCallback(async (room: Room) => {
     try {
+      // Check if we're on HTTPS
+      if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
+        setState(prev => ({ 
+          ...prev, 
+          error: 'マイクアクセスにはHTTPS接続が必要です。https://talktune.biz でアクセスしてください。' 
+        }));
+        return;
+      }
+
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        setState(prev => ({ ...prev, error: 'マイクアクセスにはHTTPS接続が必要です。https://talktune.biz でアクセスしてください。' }));
+        setState(prev => ({ 
+          ...prev, 
+          error: 'このブラウザではマイクアクセスがサポートされていません。' 
+        }));
         return;
       }
 
@@ -106,13 +118,25 @@ export const useLiveKitVoiceAgent = (config: LiveKitConfig) => {
       console.warn('Microphone not available in this environment:', error);
       if (error instanceof Error) {
         if (error.name === 'NotAllowedError') {
-          setState(prev => ({ ...prev, error: 'マイクアクセスが拒否されました。ブラウザでマイクアクセスを許可してください。' }));
+          setState(prev => ({ 
+            ...prev, 
+            error: 'マイクアクセスが拒否されました。ブラウザでマイクアクセスを許可してください。' 
+          }));
         } else if (error.name === 'NotFoundError') {
-          setState(prev => ({ ...prev, error: 'マイクが見つかりません。HTTPSでアクセスするか、マイクが接続されていることを確認してください。' }));
+          setState(prev => ({ 
+            ...prev, 
+            error: 'マイクが見つかりません。HTTPSでアクセスするか、マイクが接続されていることを確認してください。' 
+          }));
         } else if (error.name === 'NotReadableError') {
-          setState(prev => ({ ...prev, error: 'マイクが他のアプリケーションで使用されています。' }));
+          setState(prev => ({ 
+            ...prev, 
+            error: 'マイクが他のアプリケーションで使用されています。' 
+          }));
         } else {
-          setState(prev => ({ ...prev, error: 'マイクアクセスエラー: HTTPSでアクセスしてください。' }));
+          setState(prev => ({ 
+            ...prev, 
+            error: 'マイクアクセスエラー: HTTPSでアクセスしてください。' 
+          }));
         }
       }
     }
