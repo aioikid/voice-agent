@@ -55,14 +55,16 @@ async def agent_entrypoint(ctx: agents.JobContext):
     except Exception as e:
         logger.error(f"❌ エージェント処理でエラー: {e}", exc_info=True)
 
-# --- Webサーバー起動時にAgent Workerを開始する ---
-@app.on_event("startup")
-async def startup_event():
+# --- Webサーバー起動時にAgent Workerを開始する (新しいlifespan方式) ---
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     logger.info("🚀 Webサーバー起動。LiveKit Agent Workerを開始します。")
-    worker = agents.Worker(
-        request_fnc=agent_entrypoint,
-    )
+    worker = agents.Worker(agent=VoiceAssistant()) # ← このように直接Agentを渡す
     asyncio.create_task(worker.run())
+    yield
+    await worker.aclose()
+
+app = FastAPI(lifespan=lifespan) # ← lifespanをここで登録
 
 # --- フロントエンドのファイルを提供するための設定 ---
 app.mount("/assets", StaticFiles(directory="dist/assets"), name="assets")
