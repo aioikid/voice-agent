@@ -1,6 +1,3 @@
-"""
-Combined server for serving the frontend and managing the voice agent
-"""
 import asyncio
 import os
 import subprocess
@@ -27,34 +24,56 @@ app.add_middleware(
 agent_process = None
 agent_status = {"running": False, "last_started": None, "error": None}
 
+# --- ここから追加 ---
+def log_pipe(pipe, log_level):
+    """ subprocessのパイプからログを読み取り、printする """
+    try:
+        with pipe:
+            for line in iter(pipe.readline, ''):
+                print(f"AGENT LOG [{log_level}]: {line.strip()}")
+    except Exception as e:
+        print(f"AGENT LOGPIPE ERROR: {e}")
+# --- ここまで追加 ---
+
+
 def start_agent():
     global agent_process, agent_status
     
-    try:
-        if agent_process and agent_process.poll() is None:
+    if agent_process and agent_process.poll() is None:
+        try:
             agent_process.terminate()
-            agent_process.wait(timeout=10)
-    except:
-        pass
+            agent_process.wait(timeout=5)
+        except Exception as e:
+            print(f"Failed to terminate previous agent process: {e}")
+            agent_process.kill()
+            agent_process.wait()
     
     try:
         agent_process = subprocess.Popen(
-            ["python", "agent.py", "start"],
+            ["python", "-u", "agent.py", "start"], # -uフラグを追加
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            text=True
+            text=True,
+            bufsize=1 # バッファリングを無効化
         )
         
+        # --- ここから追加 ---
+        stdout_thread = threading.Thread(target=log_pipe, args=[agent_process.stdout, "INFO"], daemon=True)
+        stderr_thread = threading.Thread(target=log_pipe, args=[agent_process.stderr, "ERROR"], daemon=True)
+        stdout_thread.start()
+        stderr_thread.start()
+        # --- ここまで追加 ---
+
         agent_status["running"] = True
         agent_status["last_started"] = time.time()
         agent_status["error"] = None
-        
         print(f"Voice agent started with PID: {agent_process.pid}")
         
     except Exception as e:
         agent_status["running"] = False
         agent_status["error"] = str(e)
         print(f"Failed to start voice agent: {e}")
+
 
 def monitor_agent():
     global agent_process, agent_status
@@ -66,11 +85,11 @@ def monitor_agent():
                 print("Voice agent process died, restarting...")
                 start_agent()
             
-            time.sleep(30)
+            time.sleep(15) # チェック間隔を短縮
             
         except Exception as e:
             print(f"Error in agent monitor: {e}")
-            time.sleep(60)
+            time.sleep(30)
 
 @app.get("/health")
 async def health_check():
@@ -80,43 +99,19 @@ async def health_check():
         "timestamp": time.time()
     }
 
-@app.get("/agent/status")
-async def get_agent_status():
-    global agent_process
-    
-    is_running = agent_process and agent_process.poll() is None
-    agent_status["running"] = is_running
-    
-    return {
-        "running": is_running,
-        "last_started": agent_status["last_started"],
-        "error": agent_status["error"],
-        "pid": agent_process.pid if agent_process else None
-    }
+# ... (他のAPIエンドポイントは省略) ...
 
-@app.post("/agent/restart")
-async def restart_agent():
-    try:
-        start_agent()
-        return {"message": "Agent restart initiated", "status": "success"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to restart agent: {str(e)}")
-
+# --- フロントエンド提供のコード ---
 public_dir = Path("public")
 if public_dir.exists():
     app.mount("/static", StaticFiles(directory="public"), name="static")
     
-    @app.get("/")
-    async def serve_frontend():
-        return FileResponse("public/index.html")
-    
     @app.get("/{path:path}")
     async def serve_frontend_routes(path: str):
         file_path = public_dir / path
-        if file_path.exists() and file_path.is_file():
-            return FileResponse(file_path)
-        else:
-            return FileResponse("public/index.html")
+        if path == "" or not file_path.is_file():
+            return FileResponse(public_dir / "index.html")
+        return FileResponse(file_path)
 
 def main():
     if not os.path.exists(".env"):
