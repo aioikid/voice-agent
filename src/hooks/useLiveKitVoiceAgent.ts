@@ -93,7 +93,7 @@ export const useLiveKitVoiceAgent = (config: LiveKitConfig) => {
     }
   }, [config]);
       
-    } catch (error) {
+      catch (error) {
       console.error('❌ Failed to connect:', error);
       setState(prev => ({ 
         ...prev, 
