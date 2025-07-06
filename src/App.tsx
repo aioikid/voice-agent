@@ -181,49 +181,123 @@ function App() {
                       try {
                         console.log('Manual microphone test started');
                         
+                        // より詳細な環境診断
+                        console.log('=== 🔍 環境診断開始 ===');
+                        console.log('User Agent:', navigator.userAgent);
+                        console.log('URL:', window.location.href);
+                        console.log('Secure Context:', window.isSecureContext);
+                        console.log('MediaDevices available:', !!navigator.mediaDevices);
+                        console.log('getUserMedia available:', !!navigator.mediaDevices?.getUserMedia);
+                        
                         // デバイス一覧を確認
                         const devices = await navigator.mediaDevices.enumerateDevices();
                         const audioInputs = devices.filter(device => device.kind === 'audioinput');
-                        console.log('Available audio devices:', audioInputs);
+                        console.log('Available audio devices (before permission):', audioInputs);
+                        console.log('Audio devices detail:', audioInputs.map(device => ({
+                          deviceId: device.deviceId,
+                          label: device.label,
+                          groupId: device.groupId
+                        })));
                         
                         // 権限状態を確認
-                        const permission = await navigator.permissions.query({ name: 'microphone' as PermissionName });
-                        console.log('Microphone permission state:', permission.state);
+                        let permissionState = 'unknown';
+                        try {
+                          const permission = await navigator.permissions.query({ name: 'microphone' as PermissionName });
+                          permissionState = permission.state;
+                          console.log('Microphone permission state:', permission.state);
+                        } catch (permError) {
+                          console.log('Permission query not supported:', permError);
+                        }
                         
-                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                      // より詳細なデバイス情報を表示
-                      console.log('All devices:', devices);
-                      console.log('Audio inputs detail:', audioInputs.map(device => ({
-                        deviceId: device.deviceId,
-                        label: device.label,
-                        groupId: device.groupId
-                      })));
-                      
-                        console.log('Microphone test successful:', stream);
-                        alert(`マイクアクセス成功！\n利用可能なマイク: ${audioInputs.length}個\n権限状態: ${permission.state}\n音声エージェントに接続できます。`);
-                      
-                      // ストリームの詳細情報を取得
-                      const tracks = stream.getAudioTracks();
-                      const trackInfo = tracks.map(track => ({
-                        label: track.label,
-                        deviceId: track.getSettings().deviceId,
-                        enabled: track.enabled,
-                        muted: track.muted,
-                        readyState: track.readyState
-                      }));
-                      console.log('Audio tracks:', trackInfo);
-                      
-                      alert(`マイクアクセス成功！\n利用可能なマイク: ${audioInputs.length}個\n権限状態: ${permission.state}\nアクティブトラック: ${tracks.length}個\n音声エージェントに接続できます。`);
+                        // 複数の方法でマイクアクセスを試行
+                        console.log('=== 🎤 マイクアクセステスト開始 ===');
+                        
+                        // 方法1: 基本的なgetUserMedia
+                        let testResult = null;
+                        try {
+                          console.log('方法1: 基本的なgetUserMedia');
+                          const stream1 = await navigator.mediaDevices.getUserMedia({ audio: true });
+                          const tracks1 = stream1.getAudioTracks();
+                          console.log('✅ 基本的なgetUserMedia成功:', tracks1.length, 'tracks');
+                          testResult = { method: '基本的なgetUserMedia', tracks: tracks1.length };
+                          stream1.getTracks().forEach(track => track.stop());
+                        } catch (error1) {
+                          console.log('❌ 基本的なgetUserMedia失敗:', error1);
+                        }
+                        
+                        // 方法2: 制約付きgetUserMedia
+                        if (!testResult) {
+                          try {
+                            console.log('方法2: 制約付きgetUserMedia');
+                            const stream2 = await navigator.mediaDevices.getUserMedia({ 
+                              audio: {
+                                echoCancellation: true,
+                                noiseSuppression: true,
+                                autoGainControl: true
+                              }
+                            });
+                            const tracks2 = stream2.getAudioTracks();
+                            console.log('✅ 制約付きgetUserMedia成功:', tracks2.length, 'tracks');
+                            testResult = { method: '制約付きgetUserMedia', tracks: tracks2.length };
+                            stream2.getTracks().forEach(track => track.stop());
+                          } catch (error2) {
+                            console.log('❌ 制約付きgetUserMedia失敗:', error2);
+                          }
+                        }
+                        
+                        // 方法3: 特定デバイスでgetUserMedia
+                        if (!testResult && audioInputs.length > 0) {
+                          try {
+                            console.log('方法3: 特定デバイスでgetUserMedia');
+                            const deviceId = audioInputs[0].deviceId;
+                            const stream3 = await navigator.mediaDevices.getUserMedia({ 
+                              audio: { deviceId: { exact: deviceId } }
+                            });
+                            const tracks3 = stream3.getAudioTracks();
+                            console.log('✅ 特定デバイスgetUserMedia成功:', tracks3.length, 'tracks');
+                            testResult = { method: '特定デバイスgetUserMedia', tracks: tracks3.length };
+                            stream3.getTracks().forEach(track => track.stop());
+                          } catch (error3) {
+                            console.log('❌ 特定デバイスgetUserMedia失敗:', error3);
+                          }
+                        }
+                        
+                        // 権限取得後のデバイス一覧を再確認
+                        const devicesAfter = await navigator.mediaDevices.enumerateDevices();
+                        const audioInputsAfter = devicesAfter.filter(device => device.kind === 'audioinput');
+                        console.log('Available audio devices (after permission):', audioInputsAfter);
+                        
+                        if (testResult) {
+                          alert(`🎉 マイクアクセス成功！\n\n✅ 成功した方法: ${testResult.method}\n🎤 利用可能なマイク: ${audioInputsAfter.length}個\n🔐 権限状態: ${permissionState}\n📊 アクティブトラック: ${testResult.tracks}個\n\n音声エージェントに接続できます。`);
+                        } else {
+                          alert(`❌ マイクアクセス失敗\n\n🎤 検出されたマイク: ${audioInputsAfter.length}個\n🔐 権限状態: ${permissionState}\n\nブラウザの設定でマイクアクセスを許可してください。`);
+                        }
                       } catch (error) {
                         console.error('Manual microphone test failed:', error);
                         if (error instanceof Error) {
-                          alert(`マイクアクセス失敗:\nエラー名: ${error.name}\nメッセージ: ${error.message}\n\nブラウザの設定でマイクアクセスを許可してください。`);
+                          let errorDetails = `❌ マイクアクセス失敗\n\nエラー名: ${error.name}\nメッセージ: ${error.message}\n\n`;
+                          
+                          switch (error.name) {
+                            case 'NotAllowedError':
+                              errorDetails += '🔒 解決方法:\n1. アドレスバー左側の🔒マークをクリック\n2. マイクを「許可」に設定\n3. ページを更新';
+                              break;
+                            case 'NotFoundError':
+                              errorDetails += '🎤 解決方法:\n1. マイクが正しく接続されているか確認\n2. システムのサウンド設定を確認\n3. デバイスマネージャーを確認';
+                              break;
+                            case 'NotReadableError':
+                              errorDetails += '🚫 解決方法:\n1. 他のアプリ（Zoom、Teams等）を終了\n2. ブラウザを再起動\n3. PCを再起動';
+                              break;
+                            default:
+                              errorDetails += '🔧 一般的な解決方法:\n1. ブラウザを再起動\n2. 別のブラウザで試行\n3. PCを再起動';
+                          }
+                          
+                          alert(errorDetails);
                         }
                       }
                     }}
                     className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm"
                   >
-                    マイクテスト
+                    🎤 詳細マイクテスト
                   </button>
                 </div>
               </div>
