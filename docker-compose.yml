@@ -8,24 +8,26 @@ services:
       - "443:443"
     restart: unless-stopped
     depends_on:
-      - web # 依存先をwebサービスに変更
+      - web
 
-  web: # Webサーバー用のサービス
+  web:
     build:
       context: .
       dockerfile: Dockerfile
-    command: ["python", "server.py"] # server.pyを起動
+    command: ["python", "server.py"]
     restart: unless-stopped
     volumes:
       - ./.env:/app/.env
-    expose: # コンテナ間の通信用にポートを公開
+    expose:
       - "8000"
 
-  agent: # AIエージェント用のサービス
+  agent:
     build:
       context: .
       dockerfile: Dockerfile
-    command: ["python", "agent.py", "start"] # agent.pyをstartモードで起動
+    command: ["python", "agent.py", "start"]
     restart: unless-stopped
     volumes:
       - ./.env:/app/.env
+    depends_on:
+      - web
