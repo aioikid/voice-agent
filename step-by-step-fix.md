@@ -27,6 +27,9 @@ docker-compose --version
 ### ステップ 2: プロジェクトディレクトリの権限修正
 
 ```bash
+# プロジェクトディレクトリを作成（存在しない場合）
+sudo mkdir -p /opt/voice-agent
+
 # プロジェクトディレクトリに移動
 cd /opt/voice-agent
 
