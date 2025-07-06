@@ -87,13 +87,7 @@ async def health_check():
 
 # ... 他のAPIエンドポイント ...
 
-public_dir = Path("public")
-if public_dir.exists():
-    app.mount("/", StaticFiles(directory="public"), name="public")
-    
-    @app.get("/{path:path}")
-    async def serve_frontend_routes(path: str):
-        return FileResponse("public/index.html")
+app.mount("/", StaticFiles(directory="public", html=True), name="public")
 
 def main():
     if not os.path.exists(".env"):
