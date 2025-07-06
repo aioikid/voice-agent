@@ -1,64 +1,108 @@
-import os
 import asyncio
-from dotenv import load_dotenv
+import os
+import subprocess
+import threading
+import time
+from pathlib import Path
+import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
-from starlette.responses import FileResponse
-import uvicorn
-from livekit import agents, api
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 
-# .envファイルから環境変数を読み込む
-load_dotenv()
-LIVEKIT_URL = os.getenv("LIVEKIT_URL")
-LIVEKIT_API_KEY = os.getenv("LIVEKIT_API_KEY")
-LIVEKIT_API_SECRET = os.getenv("LIVEKIT_API_SECRET")
+app = FastAPI(title="LiveKit Voice Agent Server")
 
-# --- FastAPI Webサーバーのセットアップ ---
-app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-# --- フロントエンドのファイルを提供 ---
-app.mount("/assets", StaticFiles(directory="public/assets"), name="assets")
+agent_process = None
+agent_status = {"running": False, "last_started": None, "error": None}
 
-@app.get("/{full_path:path}")
-async def serve_frontend(full_path: str):
-    file_path = os.path.join("public", full_path.strip("/"))
-    if os.path.isfile(file_path):
-        return FileResponse(file_path)
-    return FileResponse(os.path.join("public", "index.html"))
-
-
-# --- ルームセッションを生成するためのAPIエンドポイント ---
-@app.get("/token")
-async def get_token(room_name: str, identity: str):
-    if not all([LIVEKIT_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET]):
-        raise HTTPException(status_code=500, detail="LiveKit server credentials not set")
-
+def log_pipe(pipe, log_level):
     try:
-        # LiveKit Room APIクライアントを初期化
-        lk_api = api.LiveKitAPI(LIVEKIT_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET)
-        
-        # ユーザー用のトークンを生成
-        token = api.AccessToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET) \
-            .with_identity(identity) \
-            .with_name(identity) \
-            .with_grant(api.VideoGrant(room_join=True, room=room_name)) \
-            .to_jwt()
+        with pipe:
+            for line in iter(pipe.readline, ''):
+                print(f"AGENT LOG [{log_level}]: {line.strip()}")
+    except Exception as e:
+        print(f"AGENT LOGPIPE ERROR: {e}")
 
-        # AIエージェントをルームに参加させる
-        # JobType.JT_ROOM を使用して、指定されたルームでエージェントを起動
-        await lk_api.create_job(
-            agents.Job(
-                id=f"agent-for-{room_name}",
-                room=api.Room(name=room_name),
-                agent=agents.Agent(type=agents.Agent.Type.AGENT_TYPE_DEFAULT)
-            )
+def start_agent():
+    global agent_process, agent_status
+    
+    if agent_process and agent_process.poll() is None:
+        try:
+            agent_process.terminate()
+            agent_process.wait(timeout=5)
+        except:
+            agent_process.kill()
+            agent_process.wait()
+    
+    try:
+        agent_process = subprocess.Popen(
+            ["python", "-u", "agent.py", "start"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            bufsize=1
         )
         
-        return {"token": token}
+        stdout_thread = threading.Thread(target=log_pipe, args=[agent_process.stdout, "INFO"], daemon=True)
+        stderr_thread = threading.Thread(target=log_pipe, args=[agent_process.stderr, "ERROR"], daemon=True)
+        stdout_thread.start()
+        stderr_thread.start()
+
+        agent_status["running"] = True
+        agent_status["last_started"] = time.time()
+        agent_status["error"] = None
+        print(f"Voice agent started with PID: {agent_process.pid}")
+        
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get token or dispatch agent: {e}")
+        agent_status["running"] = False
+        agent_status["error"] = str(e)
+        print(f"Failed to start voice agent: {e}")
 
+def monitor_agent():
+    global agent_process, agent_status
+    
+    while True:
+        try:
+            if agent_process and agent_process.poll() is not None:
+                agent_status["running"] = False
+                print("Voice agent process died, restarting...")
+                start_agent()
+            time.sleep(15)
+        except Exception as e:
+            print(f"Error in agent monitor: {e}")
+            time.sleep(30)
 
-# --- メインの実行部分 ---
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
+
+public_dir = Path("public")
+if public_dir.exists():
+    app.mount("/", StaticFiles(directory="public", html=True), name="public")
+    
+    @app.get("/{path:path}")
+    async def serve_frontend_routes(path: str):
+        return FileResponse("public/index.html")
+
+def main():
+    if not os.path.exists(".env"):
+        print("Warning: .env file not found.")
+    
+    monitor_thread = threading.Thread(target=monitor_agent, daemon=True)
+    monitor_thread.start()
+    
+    start_agent()
+    
+    print("Starting LiveKit Voice Agent Server...")
+    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
+
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    main()
