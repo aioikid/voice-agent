@@ -24,10 +24,7 @@ COPY agent.py .
 COPY server.py .
 COPY .env.example .env.example
 # コピー先を 'public' に戻します
-COPY --from=frontend-builder /app/dist ./public
+# Copy built frontend from previous stage to the "dist" directory
+COPY --from=frontend-builder /app/dist ./dist
+
 EXPOSE 8000
-# ヘルスチェックを戻します
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
-# 起動コマンドを server.py にします
-CMD ["python", "server.py"]
