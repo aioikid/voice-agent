@@ -2,7 +2,7 @@ services:
   nginx:
     build:
       context: .
-      dockerfile: Dockerfile.nginx
+      dockerfile: Dockerfile.nginx # これは前回作成したものでOK
     ports:
       - "80:80"
       - "443:443"
@@ -13,7 +13,8 @@ services:
   voice-agent:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile # メインのDockerfile
     restart: unless-stopped
     volumes:
       - ./.env:/app/.env
+    # ports はnginxが担当するので不要
