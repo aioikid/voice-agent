@@ -10,7 +10,7 @@ services:
     depends_on:
       - voice-agent
 
-  voice-agent:
+  voice-agent: # "web" と "agent" をこの一つに統合
     build:
       context: .
       dockerfile: Dockerfile
