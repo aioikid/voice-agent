@@ -92,6 +92,46 @@ function App() {
                 <div>
                   <p className="text-yellow-800 text-sm font-medium">接続の問題</p>
                   <p className="text-yellow-700 text-sm">{state.error}</p>
+                  {state.error.includes('HTTPS') && (
+                    <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <p className="text-blue-800 text-sm font-medium">🔒 HTTPS接続が必要です</p>
+                      <p className="text-blue-700 text-sm mb-2">
+                        マイクアクセスにはHTTPS接続が必要です。以下のリンクからアクセスしてください：
+                      </p>
+                      <a 
+                        href="https://talktune.biz" 
+                        className="inline-block px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        HTTPS版にアクセス
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* HTTPS Notice */}
+          {!state.error && window.location.protocol === 'http:' && (
+            <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+              <div className="flex items-start space-x-2">
+                <div className="text-amber-600 mt-0.5">🔒</div>
+                <div>
+                  <p className="text-amber-800 text-sm font-medium">マイクアクセスにはHTTPS接続が推奨されます</p>
+                  <p className="text-amber-700 text-sm mb-3">
+                    現在HTTP接続のため、マイクアクセスが制限される可能性があります。
+                    完全な機能を利用するにはHTTPS版をご利用ください。
+                  </p>
+                  <a 
+                    href="https://talktune.biz" 
+                    className="inline-block px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors text-sm"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    HTTPS版にアクセス
+                  </a>
                 </div>
               </div>
             </div>

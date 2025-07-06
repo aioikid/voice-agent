@@ -96,7 +96,7 @@ export const useLiveKitVoiceAgent = (config: LiveKitConfig) => {
   const enableMicrophone = useCallback(async (room: Room) => {
     try {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        console.warn('getUserMedia not supported in this environment');
+        setState(prev => ({ ...prev, error: 'マイクアクセスにはHTTPS接続が必要です。https://talktune.biz でアクセスしてください。' }));
         return;
       }
 
@@ -104,6 +104,17 @@ export const useLiveKitVoiceAgent = (config: LiveKitConfig) => {
       
     } catch (error) {
       console.warn('Microphone not available in this environment:', error);
+      if (error instanceof Error) {
+        if (error.name === 'NotAllowedError') {
+          setState(prev => ({ ...prev, error: 'マイクアクセスが拒否されました。ブラウザでマイクアクセスを許可してください。' }));
+        } else if (error.name === 'NotFoundError') {
+          setState(prev => ({ ...prev, error: 'マイクが見つかりません。HTTPSでアクセスするか、マイクが接続されていることを確認してください。' }));
+        } else if (error.name === 'NotReadableError') {
+          setState(prev => ({ ...prev, error: 'マイクが他のアプリケーションで使用されています。' }));
+        } else {
+          setState(prev => ({ ...prev, error: 'マイクアクセスエラー: HTTPSでアクセスしてください。' }));
+        }
+      }
     }
   }, []);
 
