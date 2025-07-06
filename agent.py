@@ -31,7 +31,7 @@ class VoiceAssistant(agents.Agent):
             tts=openai.TTS(model="tts-1", voice="alloy"),
         )
         
-        # セッションを開始
+        # この行を追加
         await session.start(ctx.room)
         
         # 最初の挨拶を送信
