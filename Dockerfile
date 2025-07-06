@@ -14,16 +14,26 @@ RUN npm run build
 
 # Python backend stage
 FROM python:3.11-slim
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
+
+# Copy Python requirements and install dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy Python files
 COPY agent.py .
 COPY server.py .
-# Copy built frontend from previous stage to the "public" directory
+COPY .env.example .env.example
+
+# Copy built frontend from previous stage
 COPY --from=frontend-builder /app/dist ./public
 
 EXPOSE 8000
 
-# CMDでserver.pyを起動する
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
 CMD ["python", "server.py"]
