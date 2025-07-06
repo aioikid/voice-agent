@@ -1,8 +1,0 @@
-FROM nginx:alpine
-
-# 証明書ファイルをコンテナ内にコピー
-COPY ./certs/fullchain1.pem /etc/nginx/ssl/fullchain1.pem
-COPY ./certs/privkey1.pem /etc/nginx/ssl/privkey1.pem
-
-# Nginx設定ファイルをコンテナ内にコピー
-COPY ./nginx.conf /etc/nginx/nginx.conf
