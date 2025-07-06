@@ -191,9 +191,29 @@ function App() {
                         console.log('Microphone permission state:', permission.state);
                         
                         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                      // より詳細なデバイス情報を表示
+                      console.log('All devices:', devices);
+                      console.log('Audio inputs detail:', audioInputs.map(device => ({
+                        deviceId: device.deviceId,
+                        label: device.label,
+                        groupId: device.groupId
+                      })));
+                      
                         console.log('Microphone test successful:', stream);
                         alert(`マイクアクセス成功！\n利用可能なマイク: ${audioInputs.length}個\n権限状態: ${permission.state}\n音声エージェントに接続できます。`);
-                        stream.getTracks().forEach(track => track.stop());
+                      
+                      // ストリームの詳細情報を取得
+                      const tracks = stream.getAudioTracks();
+                      const trackInfo = tracks.map(track => ({
+                        label: track.label,
+                        deviceId: track.getSettings().deviceId,
+                        enabled: track.enabled,
+                        muted: track.muted,
+                        readyState: track.readyState
+                      }));
+                      console.log('Audio tracks:', trackInfo);
+                      
+                      alert(`マイクアクセス成功！\n利用可能なマイク: ${audioInputs.length}個\n権限状態: ${permission.state}\nアクティブトラック: ${tracks.length}個\n音声エージェントに接続できます。`);
                       } catch (error) {
                         console.error('Manual microphone test failed:', error);
                         if (error instanceof Error) {
