@@ -60,7 +60,7 @@ async def agent_entrypoint(ctx: agents.JobContext):
 async def startup_event():
     logger.info("🚀 Webサーバー起動。LiveKit Agent Workerを開始します。")
     worker = agents.Worker(
-        entrypoint_fnc=agent_entrypoint,
+        request_fnc=agent_entrypoint,
     )
     asyncio.create_task(worker.run())
 
