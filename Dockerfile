@@ -20,8 +20,10 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY agent.py .
 COPY server.py .
-# フロントエンドのファイルを "public" にコピー
+# Copy built frontend from previous stage to the "public" directory
 COPY --from=frontend-builder /app/dist ./public
+
 EXPOSE 8000
-# server.py を起動するように修正
+
+# CMDでserver.pyを起動する
 CMD ["python", "server.py"]
